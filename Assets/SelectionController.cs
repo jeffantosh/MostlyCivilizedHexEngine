@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class SelectionController : MonoBehaviour {
 
@@ -38,7 +36,6 @@ public class SelectionController : MonoBehaviour {
             {
                 // We already have a city selected, make sure we cancel the old mouse mode
                 mouseController.ResetMouseBehavior();
-
             }
 
             __selectedCity = null;

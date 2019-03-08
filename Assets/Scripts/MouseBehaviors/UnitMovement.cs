@@ -1,11 +1,20 @@
 ﻿using DebugLogging;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using static MouseController;
 
+public delegate Coroutine StartCoroutineCallback(IEnumerator routine);
+
 public class UnitMovement : AbstractMouseBehavior
 {
+    private readonly StartCoroutineCallback callback;
+
+    public UnitMovement(StartCoroutineCallback callback)
+    {
+        this.callback = callback;
+    }
+
+
     public override void Execute(HexInfo hexInfo, PositionInfo positionInfo, CameraInfo camInfo, SelectionController selectionController)
     {
         if (Input.GetMouseButtonUp(1) || selectionController.SelectedUnit == null)
@@ -18,7 +27,7 @@ public class UnitMovement : AbstractMouseBehavior
 
                 // TODO: Tell Unit and/or HexMap to process unit movement
 
-                StartCoroutine(hexInfo.HexMap.DoUnitMoves(selectionController.SelectedUnit));
+                this.callback(hexInfo.HexMap.DoUnitMoves(selectionController.SelectedUnit));
             }
 
             MarkComplete();

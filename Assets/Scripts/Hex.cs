@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using QPath;
@@ -54,9 +53,9 @@ public class Hex : IQPathTile {
     float radius = 1f;
 
     HashSet<Unit> units;
-    public Unit[] Units { 
+    public List<Unit> Units { 
         get{
-            return units.ToArray();
+            return units.ToList();
         }
     }
     public City City { get; protected set; }

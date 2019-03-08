@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using QPath;
-using System.Linq;
 using DebugLogging;
 
 public class HexMap : MonoBehaviour, IQPathWorld {

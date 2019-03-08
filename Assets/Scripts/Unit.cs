@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using QPath;
-using System.Linq;
 using DebugLogging;
 
 public class Unit : MapObject, IQPathUnit {
@@ -12,7 +10,7 @@ public class Unit : MapObject, IQPathUnit {
         Name = "Dwarf";
     }
 
-    public int Strenth = 8;
+    public int Strength = 8;
     public int Movement = 2;
     public int MovementRemaining = 2;
     public bool CanBuildCities = false;
@@ -223,7 +221,9 @@ public class Unit : MapObject, IQPathUnit {
             {
                 // Civ5-style movement state that we can always enter a tile, even if we don't
                 // have enough movement left.
+#pragma warning disable CS0162 // Unreachable code detected
                 turnsUsedAfterThismove = 1;
+#pragma warning restore CS0162 // Unreachable code detected
             }
         }
 

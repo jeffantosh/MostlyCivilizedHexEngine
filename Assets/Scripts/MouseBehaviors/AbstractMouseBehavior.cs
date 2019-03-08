@@ -1,9 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using static MouseController;
 
-public abstract class AbstractMouseBehavior : MonoBehaviour, IMouseBehavior
+public abstract class AbstractMouseBehavior : IMouseBehavior
 {
     private bool isComplete = false;
 

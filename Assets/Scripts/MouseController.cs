@@ -105,24 +105,14 @@ public class MouseController : MonoBehaviour
 
         if (Input.GetMouseButtonUp(0))
         {
-            DebugLogger.Log(LogLevel.Informational, "Primary Mouse Button click detected.", GetType());
-
-            Unit[] us = hexInfo.CurrentHex.Units;
-
-            // TODO: Implement cycling through multiple units in the same tile
-            if (us.Length > 0)
-            {
-                selectionController.SelectedUnit = us[0];
-                // NOTE: Selecting a unit does NOT change our mouse mode
-            }
-
+            mouseBehavior = new UnitSelection();
         }
         else if (selectionController.SelectedUnit != null && Input.GetMouseButtonDown(1))
         {
             // We have a selected unit, and we've pushed down the right
             // mouse button, so enter unit movement mode.
             //Update_CurrentFunc = Update_UnitMovement;
-            mouseBehavior = new UnitMovement();
+            mouseBehavior = new UnitMovement(this.StartCoroutine);
 
         }
         else if (Input.GetMouseButton(0) &&

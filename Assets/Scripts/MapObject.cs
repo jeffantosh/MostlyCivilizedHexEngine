@@ -1,16 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using QPath;
-using System.Linq;
+﻿using System;
 
 public class MapObject
 {
     public MapObject()
     {
+        Guid = Guid.NewGuid();
     }
 
     public string Name;
+    public readonly Guid Guid;
     public int HitPoints = 100;
     public bool CanBeAttacked = true;
     public int FactionID = 0;
@@ -32,10 +30,7 @@ public class MapObject
     {
         IsDestroyed = true;
 
-        if(OnObjectDestroyed != null)
-        {
-            OnObjectDestroyed( this );
-        }
+        OnObjectDestroyed?.Invoke(this);
     }
 
     virtual public void SetHex( Hex newHex )
@@ -44,10 +39,12 @@ public class MapObject
 
         Hex = newHex;
 
-        if(OnObjectMoved != null)
-        {
-            OnObjectMoved(oldHex, newHex);
-        }
+        OnObjectMoved?.Invoke(oldHex, newHex);
+    }
+
+    public bool Equals(MapObject obj)
+    {
+        return this.Guid == obj.Guid;
     }
 
 }

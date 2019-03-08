@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class HexMap_Continent : HexMap {
 
@@ -78,12 +76,15 @@ public class HexMap_Continent : HexMap {
 
         UpdateHexVisuals();
 
-        Unit unit = new Unit();
+        Unit unit0 = new Unit();
+        Unit unit1 = new Unit();
 
         // For development, turn on CanBuildCities on this unit
-        unit.CanBuildCities = true;
+        unit0.CanBuildCities = true;
+        unit1.CanBuildCities = true;
 
-        SpawnUnitAt(unit, UnitDwarfPrefab, 36, 15);
+        SpawnUnitAt(unit0, UnitDwarfPrefab, 36, 15);
+        SpawnUnitAt(unit1, UnitDwarfPrefab, 36, 17);
 
         City city = new City();
         SpawnCityAt(city, CityPrefab, 35, 15);

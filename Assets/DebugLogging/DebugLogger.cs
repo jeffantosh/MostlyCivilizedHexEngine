@@ -8,7 +8,7 @@ namespace DebugLogging
     {
         // TODO: create configuration/options class where this can be changed. default should
         // be error when this is done.
-        public static LogLevel LogLevel = LogLevel.Trace; // change to error when the todo is done.
+        public static LogLevel LogLevel = LogLevel.Informational; // change to error when the todo is done.
         public static bool ContinueOnException = false;
 
         private const string DEFAULT_SOURCE = "Unknown";
