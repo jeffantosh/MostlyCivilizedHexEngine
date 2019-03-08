@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using QPath;
 using System.Linq;
+using DebugLogging;
 
 public class HexMap : MonoBehaviour, IQPathWorld {
 
@@ -56,10 +57,10 @@ public class HexMap : MonoBehaviour, IQPathWorld {
         // to do anything, or just return immediately.
         while( u.DoMove() )
         {
-            Debug.Log("DoMove returned true -- will be called again.");
+            DebugLogger.Log(LogLevel.Informational, "DoMove returned true -- will be called again.", GetType());
             // TODO: Check to see if an animation is playing, if so
             // wait for it to finish. 
-            while(AnimationIsPlaying) {
+            while (AnimationIsPlaying) {
                 yield return null; // Wait one frame
             }
 
@@ -124,10 +125,11 @@ public class HexMap : MonoBehaviour, IQPathWorld {
         {
             // New turn has begun!
             TurnNumber++;
-            Debug.Log("STARTING TURN: " + TurnNumber);
+            DebugLogger.Log(LogLevel.GameMessage, $"STARTING TURN: {TurnNumber}", GetType());
+
         }
 
-        Debug.Log("Starting turn for player index: " + currentPlayerIndex + " -- " + CurrentPlayer.PlayerName + " -- " + CurrentPlayer.Type.ToString());
+        DebugLogger.Log(LogLevel.GameMessage, $"Starting turn for {CurrentPlayer.PlayerName}({currentPlayerIndex}) [{CurrentPlayer.Type}]", GetType());
     }
 
     private Dictionary<Unit, GameObject> unitToGameObjectMap;
@@ -137,7 +139,7 @@ public class HexMap : MonoBehaviour, IQPathWorld {
     {
         if(hexes == null)
         {
-            Debug.LogError("Hexes array not yet instantiated.");
+            DebugLogger.Log(LogLevel.Error, "Hexes array not yet instantiated.", GetType());
             return null;
         }
 
@@ -163,7 +165,7 @@ public class HexMap : MonoBehaviour, IQPathWorld {
         }
         catch
         {
-            Debug.LogError("GetHexAt: " + x + "," + y);
+            DebugLogger.Log(LogLevel.Warning, $"Hex not found ({x},{y})", GetType());
             return null;
         }
     }
@@ -399,7 +401,6 @@ public class HexMap : MonoBehaviour, IQPathWorld {
 
     public void SpawnCityAt( City city, GameObject prefab, int q, int r )
     {
-        Debug.Log("SpawnCityAt");
         if(cityToGameObjectMap == null)
         {
             cityToGameObjectMap = new Dictionary<City, GameObject>();
@@ -411,10 +412,11 @@ public class HexMap : MonoBehaviour, IQPathWorld {
         try
         {
             city.SetHex(myHex);
+            DebugLogger.Log(LogLevel.GameMessage, $"{CurrentPlayer.PlayerName} has built a new city {city.Name}", GetType());
         }
         catch(UnityException e)
         {
-            Debug.LogError(e.Message);
+            DebugLogger.Log(e);
             return;
         }
 

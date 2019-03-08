@@ -10,6 +10,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Priority_Queue;
+using DebugLogging;
 
 /// <summary>
 /// Wraps the FastPriorityQueue class so that it's both easy-to-use,
@@ -72,7 +73,7 @@ public class PathfindingPriorityQueue<T>
     {
         if (mapDataToWrappedNode.ContainsKey(data))
         {
-            Debug.LogError("Priority Queue can't re-enqueue a node that's already enqueued.");
+            DebugLogger.Log(LogLevel.Error, "Priority Queue can't re-enqueue a node that's already enqueued.", GetType());
             return;
         }
 

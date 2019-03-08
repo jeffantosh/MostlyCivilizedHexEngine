@@ -1,3 +1,4 @@
+using DebugLogging;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -111,30 +112,17 @@ public class MouseController : MonoBehaviour
             return;
         }
 
-        if (Input.GetMouseButtonDown (0)) 
+        if( Input.GetMouseButtonUp(0) )
         {
-            // Left mouse button just went down.
-            // This doesn't do anything by itself, really.
-            Debug.Log("MOUSE DOWN");
-        }
-        else if( Input.GetMouseButtonUp(0) )
-        {
-            Debug.Log("MOUSE UP -- click!");
-
-            // TODO: Are we clicking on a hex with a unit?
-            //          If so, select it
+            DebugLogger.Log(LogLevel.Informational, "Primary Mouse Button click detected.", GetType());
 
             Unit[] us = hexUnderMouse.Units;
 
             // TODO: Implement cycling through multiple units in the same tile
-
             if(us.Length > 0)
             {
                 selectionController.SelectedUnit = us[0];
-
                 // NOTE: Selecting a unit does NOT change our mouse mode
-
-                //Update_CurrentFunc = Update_UnitMovement;
             }
 
         }
@@ -172,7 +160,6 @@ public class MouseController : MonoBehaviour
         if( Physics.Raycast(mouseRay, out hitInfo, Mathf.Infinity, layerMask) )
         {
             // Something got hit
-            //Debug.Log( hitInfo.collider.name );
 
             // The collider is a child of the "correct" game object that we want.
             GameObject hexGO = hitInfo.rigidbody.gameObject;
@@ -180,7 +167,6 @@ public class MouseController : MonoBehaviour
             return hexMap.GetHexFromGameObject(hexGO);
         }
 
-        //Debug.Log("Found nothing.");
         return null;
     }
 
@@ -189,7 +175,6 @@ public class MouseController : MonoBehaviour
         Ray mouseRay = Camera.main.ScreenPointToRay (mousePos);
         // What is the point at which the mouse ray intersects Y=0
         if (mouseRay.direction.y >= 0) {
-            //Debug.LogError("Why is mouse pointing up?");
             return Vector3.zero;
         }
         float rayLength = (mouseRay.origin.y / mouseRay.direction.y);
@@ -200,9 +185,9 @@ public class MouseController : MonoBehaviour
     {
         if( Input.GetMouseButtonUp(1) || selectionController.SelectedUnit == null )
         {
-            Debug.Log("Complete unit movement.");
+            DebugLogger.Log(LogLevel.Informational, "Complete unit movement.", GetType());
 
-            if(selectionController.SelectedUnit != null)
+            if (selectionController.SelectedUnit != null)
             {
                 selectionController.SelectedUnit.SetHexPath(hexPath);
 
@@ -232,7 +217,7 @@ public class MouseController : MonoBehaviour
     {
         if( Input.GetMouseButtonUp(0) )
         {
-            Debug.Log("Cancelling camera drag.");
+            DebugLogger.Log(LogLevel.Informational, "Cancelling camera drag.", GetType());
             CancelUpdateFunc();
             return;
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using QPath;
+using DebugLogging;
 
 /// <summary>
 /// The Hex class defines the grid position, world space position, size, 
@@ -181,7 +182,7 @@ public class Hex : IQPathTile {
     {
         if(this.City != null)
         {
-            throw new UnityException("Trying to add a city to a hex that already has one!");
+            DebugLogger.Log(new UnityException("Trying to add a city to a hex that already has one!"));
         }
 
         this.City = city;
@@ -191,13 +192,13 @@ public class Hex : IQPathTile {
     {
         if(this.City == null)
         {
-            Debug.LogError("Trying to remove a city where there isn't one!");
+            DebugLogger.Log(LogLevel.Error, "Trying to remove a city where there isn't one!", GetType());
             return;
         }
 
         if(this.City != city)
         {
-            Debug.LogError("Trying to remove a city that isn't ours!");
+            DebugLogger.Log(LogLevel.Error, "Trying to remove a city that isn't ours!", GetType());
             return;
         }
 

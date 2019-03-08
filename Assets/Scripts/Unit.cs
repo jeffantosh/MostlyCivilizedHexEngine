@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using QPath;
 using System.Linq;
+using DebugLogging;
 
 public class Unit : MapObject, IQPathUnit {
 
@@ -41,8 +42,9 @@ public class Unit : MapObject, IQPathUnit {
             Hex.HexMap.GetHexAt( Hex.Q + 6, Hex.R ), 
             Hex.CostEstimate 
         );
-            
-        Debug.Log("Got pathfinding path of length: " + pathHexes.Length);
+
+        DebugLogger.Log(LogLevel.Informational, $"Got pathfinding path of length: {pathHexes.Length}", GetType());
+
 
         SetHexPath(pathHexes);
     }
@@ -101,9 +103,7 @@ public class Unit : MapObject, IQPathUnit {
     /// <returns>Returns true if this should be called immediately again.</returns>
     public bool DoMove()
     {
-        Debug.Log("DoMove");
         // Do queued move
-
         if(MovementRemaining <= 0)
             return false;
 
@@ -160,7 +160,6 @@ public class Unit : MapObject, IQPathUnit {
         if(baseTurnsToEnterHex < 0)
         {
             // Impassible terrain
-            //Debug.Log("Impassible terrain at:" + hex.ToString());
             return -99999;
         }
 
@@ -179,7 +178,7 @@ public class Unit : MapObject, IQPathUnit {
 
         if( (turnsToDateFraction > 0 && turnsToDateFraction < 0.01f) || turnsToDateFraction > 0.99f )
         {
-            Debug.LogError("Looks like we've got floating-point drift: " + turnsToDate);
+            DebugLogger.Log(LogLevel.Warning, $"Correcting floaring point drift for unit {Name} - {turnsToDateFraction}", GetType());
 
             if( turnsToDateFraction < 0.01f )
                 turnsToDateFraction = 0;

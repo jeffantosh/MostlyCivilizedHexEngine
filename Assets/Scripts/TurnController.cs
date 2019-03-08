@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DebugLogging;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -47,7 +48,8 @@ public class TurnController : MonoBehaviour {
 
     public void EndTurn()
     {
-        Debug.Log("EndTurn");
+        DebugLogger.Log(LogLevel.GameMessage, "Ending Turn", GetType());
+        DebugLogger.Trace("TurnController::EndTurn");
         Unit[] units = hexMap.CurrentPlayer.Units;
         City[] cities = hexMap.CurrentPlayer.Cities;
 
@@ -94,6 +96,6 @@ public class TurnController : MonoBehaviour {
         selectionController.SelectedUnit = null;
         selectionController.SelectedCity = null;
         hexMap.AdvanceToNextPlayer();
-
+        DebugLogger.Trace("TurnController::EndTurn");
     }
 }

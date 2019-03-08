@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DebugLogging;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -32,10 +33,10 @@ namespace QPath
             CostEstimateDelegate costEstimateFunc
             ) where T : IQPathTile
         {
-            Debug.Log("QPath::FindPath");
+            DebugLogger.Trace("QPath::FindPath");
             if( world == null || unit == null || startTile == null || endTile == null )
             {
-                Debug.LogError("null values passed to QPath::FindPath");
+                DebugLogger.Log(LogLevel.Error, "null values passed to FindPath", "QPath");
                 return null;
             }
 
@@ -46,6 +47,7 @@ namespace QPath
 
             resolver.DoWork();
 
+            DebugLogger.Trace("QPath::FindPath");
             return resolver.GetList();
         }
     }

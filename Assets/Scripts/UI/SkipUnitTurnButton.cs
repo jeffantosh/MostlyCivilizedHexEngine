@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DebugLogging;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,7 +13,7 @@ public class SkipUnitTurnButton : MonoBehaviour {
 
         if(u == null)
         {
-            Debug.LogError("How is this button active if there's no selected unit?!?!?!");
+            DebugLogger.Log(LogLevel.Error, "How is this button active if there's no selected unit?!?!?!", GetType());
             return;
         }
 

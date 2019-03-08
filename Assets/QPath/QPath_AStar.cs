@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using DebugLogging;
 
 namespace QPath
 {
@@ -36,7 +37,7 @@ namespace QPath
 
         public void DoWork()
         {
-            Debug.Log("QPath_AStar::DoWork");
+            DebugLogger.Trace("QPath_AStar::DoWork");
             path = new Queue<T>();
 
             HashSet< T > closedSet = new HashSet<T>();
@@ -82,7 +83,6 @@ namespace QPath
                         // Values less than zero represent an invalid/impassable tile
                         continue;
                     }
-                    //Debug.Log(total_pathfinding_cost_to_neighbor);
 
                     float tentative_g_score = total_pathfinding_cost_to_neighbor;
 
@@ -103,7 +103,7 @@ namespace QPath
                 } // foreach neighbour
             } // while
 
-
+            DebugLogger.Trace("QPath_AStar::DoWork");
         }
 
         private void Reconstruct_path(
