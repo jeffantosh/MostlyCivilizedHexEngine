@@ -37,7 +37,7 @@ public class SelectionController : MonoBehaviour {
             if(__selectedCity != null)
             {
                 // We already have a city selected, make sure we cancel the old mouse mode
-                mouseController.CancelUpdateFunc();
+                mouseController.ResetMouseBehavior();
 
             }
 
@@ -49,7 +49,8 @@ public class SelectionController : MonoBehaviour {
             CitySelectionPanel.SetActive( __selectedCity != null );
             if(__selectedCity != null)
             {
-                mouseController.StartCityView();
+                //TODO: fix
+                //mouseController.StartCityView();
             }
         }
     }

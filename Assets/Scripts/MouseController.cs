@@ -1,109 +1,100 @@
 using DebugLogging;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class MouseController : MonoBehaviour
 {
+    public LayerMask LayerIDForHexTiles;
+    private HexInfo hexInfo;
+    private PositionInfo positionInfo;
+    private CameraInfo cameraInfo;
+    private SelectionController selectionController;
+    private IMouseBehavior mouseBehavior;
+    private List<IMouseBehavior> constantBehaviors;
 
-    // Use this for initialization
-    void Start ()
+    public void ResetMouseBehavior()
     {
-        Update_CurrentFunc = Update_DetectModeStart;
-
-        hexMap = GameObject.FindObjectOfType<HexMap>();
-
-        lineRenderer = transform.GetComponentInChildren<LineRenderer>();
-
-        selectionController = GameObject.FindObjectOfType<SelectionController>();
+        DebugLogger.Log(LogLevel.Informational, "Resetting mouse behavior", GetType());
+        mouseBehavior = null;
     }
 
-    SelectionController selectionController;
-
-    // Generic bookkeeping variables
-    HexMap hexMap;
-    Hex hexUnderMouse;
-    Hex hexLastUnderMouse;
-    Vector3 lastMousePosition;  // From Input.mousePosition
-
-    // Camera Dragging bookkeeping variables
-    int mouseDragThreshold = 1; // Threshold of mouse movement to start a drag
-    Vector3 lastMouseGroundPlanePosition;
-    Vector3 cameraTargetOffset;
-
-
-    Hex[] hexPath;
-    LineRenderer lineRenderer;
-
-    delegate void UpdateFunc();
-    UpdateFunc Update_CurrentFunc;
-
-    public LayerMask LayerIDForHexTiles;
-
-    void Update()
+    // Use this for initialization
+    private void Start()
     {
-        hexUnderMouse = MouseToHex();
-
-        if( Input.GetKeyDown(KeyCode.Escape) )
+        hexInfo = new HexInfo
         {
-            selectionController.SelectedUnit = null;
-            CancelUpdateFunc();
+            HexMap = GameObject.FindObjectOfType<HexMap>(),
+            LineRenderer = transform.GetComponentInChildren<LineRenderer>()
+        };
+        hexInfo.CurrentHex = MouseToHex();
+
+        positionInfo = new PositionInfo
+        {
+            lastMousePosition = Input.mousePosition
+        };
+
+        cameraInfo = new CameraInfo
+        {
+            MouseDragThreshold = 1
+        };
+
+        selectionController = GameObject.FindObjectOfType<SelectionController>();
+
+        // A list of Mouse Behaviors which run every frame.
+        constantBehaviors = new List<IMouseBehavior>
+        {
+            new ScrollZoom()
+        };
+    }
+
+    private void Update()
+    {
+        // Update the current hex position of the mouse
+        hexInfo.PreviousHex = hexInfo.CurrentHex;
+        hexInfo.CurrentHex = MouseToHex();
+
+        // if there is no mouse behavior, then we should try to find
+        // a new behavior to enable. If there is a mouse behavior, 
+        // then we should check to see if it's done.
+        if (mouseBehavior != null && mouseBehavior.IsComplete())
+        {
+            ResetMouseBehavior();
+        }
+        if (mouseBehavior == null)
+        {
+            AttemptToSetMouseBehavior();
         }
 
-        Update_CurrentFunc();
-
-        // Always do camera zooms (check for being over a scroll UI later)
-        Update_ScrollZoom();
-
-        lastMousePosition = Input.mousePosition;
-        hexLastUnderMouse = hexUnderMouse;
-
-        if(selectionController.SelectedUnit != null)
+        // If there is a mouse behavior, then execute that behavior
+        if (mouseBehavior != null)
         {
-            DrawPath( ( hexPath != null ) ? hexPath : selectionController.SelectedUnit.GetHexPath() );
+            //TODO: Async?
+            mouseBehavior.Execute(hexInfo, positionInfo, cameraInfo, selectionController);
+        }
+
+        // execute constant behaviors
+        constantBehaviors.ForEach(cb => cb.Execute(hexInfo, positionInfo, cameraInfo, selectionController));
+
+        positionInfo.lastMousePosition = Input.mousePosition;
+        if (selectionController.SelectedUnit != null)
+        {
+            DrawPath((hexInfo.HexPath != null) ? hexInfo.HexPath : selectionController.SelectedUnit.GetHexPath());
         }
         else
         {
-            DrawPath( null );   // Clear the path display
-        }            
-    }
-
-    void DrawPath(Hex[] hexPath)
-    {
-        if(hexPath == null || hexPath.Length == 0)
-        {
-            lineRenderer.enabled = false;
-            return;
+            DrawPath(null);   // Clear the path display
         }
-        lineRenderer.enabled = true;
-
-        Vector3[] ps = new Vector3[ hexPath.Length ];
-
-        for (int i = 0; i < hexPath.Length; i++)
-        {
-            GameObject hexGO = hexMap.GetHexGO(hexPath[i]);
-            ps[i] = hexGO.transform.position + (Vector3.up*0.1f);
-        }
-
-        lineRenderer.positionCount = ps.Length;
-        lineRenderer.SetPositions(ps);
-    }
-        
-
-    public void CancelUpdateFunc()
-    {
-        Update_CurrentFunc = Update_DetectModeStart;
-
-        // Also do cleanup of any UI stuff associated with modes.
-        hexPath = null;
     }
 
-    void Update_DetectModeStart()
+    /// <summary>
+    /// Responsible for assigning a current mouse behavior
+    /// </summary>
+    private void AttemptToSetMouseBehavior()
     {
         // Check here(?) to see if we are over a UI element,
         // if so -- ignore mouse clicks and such.
-        if( EventSystem.current.IsPointerOverGameObject() )
+        if (EventSystem.current.IsPointerOverGameObject())
         {
             // TODO: Do we want to ignore ALL GUI objects?  Consider
             // things like unit health bars, resource icons, etc...
@@ -112,181 +103,114 @@ public class MouseController : MonoBehaviour
             return;
         }
 
-        if( Input.GetMouseButtonUp(0) )
+        if (Input.GetMouseButtonUp(0))
         {
             DebugLogger.Log(LogLevel.Informational, "Primary Mouse Button click detected.", GetType());
 
-            Unit[] us = hexUnderMouse.Units;
+            Unit[] us = hexInfo.CurrentHex.Units;
 
             // TODO: Implement cycling through multiple units in the same tile
-            if(us.Length > 0)
+            if (us.Length > 0)
             {
                 selectionController.SelectedUnit = us[0];
                 // NOTE: Selecting a unit does NOT change our mouse mode
             }
 
         }
-        else if ( selectionController.SelectedUnit != null && Input.GetMouseButtonDown(1) )
+        else if (selectionController.SelectedUnit != null && Input.GetMouseButtonDown(1))
         {
             // We have a selected unit, and we've pushed down the right
             // mouse button, so enter unit movement mode.
-            Update_CurrentFunc = Update_UnitMovement;
+            //Update_CurrentFunc = Update_UnitMovement;
+            mouseBehavior = new UnitMovement();
 
         }
-        else if( Input.GetMouseButton(0) && 
-            Vector3.Distance( Input.mousePosition, lastMousePosition) > mouseDragThreshold )
+        else if (Input.GetMouseButton(0) &&
+            Vector3.Distance(Input.mousePosition, positionInfo.lastMousePosition) > cameraInfo.MouseDragThreshold)
         {
             // Left button is being held down AND the mouse moved? That's a camera drag!
-            Update_CurrentFunc = Update_CameraDrag;
-            lastMouseGroundPlanePosition = MouseToGroundPlane(Input.mousePosition);
-            Update_CurrentFunc();
+            mouseBehavior = new CameraMovement();
+            positionInfo.lastMouseGroundPlanePosition = mouseBehavior.MouseToGroundPlane(Input.mousePosition);
         }
-        else if( selectionController.SelectedUnit != null && Input.GetMouseButton(1) )
+        else if (selectionController.SelectedUnit != null && Input.GetMouseButton(1))
         {
             // We have a selected unit, and we are holding down the mouse
             // button.  We are in unit movement mode -- show a path from
             // unit to mouse position via the pathfinding system.
         }
-
     }
 
-    Hex MouseToHex()
+    /// <summary>
+    /// Based on current mouse position, finds current hex
+    /// </summary>
+    /// <returns>Found Hex or Null</returns>
+    private Hex MouseToHex()
     {
-        Ray mouseRay = Camera.main.ScreenPointToRay (Input.mousePosition);
+        Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hitInfo;
 
         int layerMask = LayerIDForHexTiles.value;
 
-        if( Physics.Raycast(mouseRay, out hitInfo, Mathf.Infinity, layerMask) )
+        if (Physics.Raycast(mouseRay, out hitInfo, Mathf.Infinity, layerMask))
         {
             // Something got hit
 
             // The collider is a child of the "correct" game object that we want.
             GameObject hexGO = hitInfo.rigidbody.gameObject;
 
-            return hexMap.GetHexFromGameObject(hexGO);
+            return hexInfo.HexMap.GetHexFromGameObject(hexGO);
         }
-
         return null;
     }
 
-    Vector3 MouseToGroundPlane(Vector3 mousePos)
-    {
-        Ray mouseRay = Camera.main.ScreenPointToRay (mousePos);
-        // What is the point at which the mouse ray intersects Y=0
-        if (mouseRay.direction.y >= 0) {
-            return Vector3.zero;
-        }
-        float rayLength = (mouseRay.origin.y / mouseRay.direction.y);
-        return mouseRay.origin - (mouseRay.direction * rayLength);
-    }
+    
 
-    void Update_UnitMovement ()
+    private void DrawPath(Hex[] hexPath)
     {
-        if( Input.GetMouseButtonUp(1) || selectionController.SelectedUnit == null )
+        if (hexPath == null || hexPath.Length == 0)
         {
-            DebugLogger.Log(LogLevel.Informational, "Complete unit movement.", GetType());
-
-            if (selectionController.SelectedUnit != null)
-            {
-                selectionController.SelectedUnit.SetHexPath(hexPath);
-
-                // TODO: Tell Unit and/or HexMap to process unit movement
-
-                StartCoroutine( hexMap.DoUnitMoves(selectionController.SelectedUnit) );
-            }
-
-            CancelUpdateFunc();
+            hexInfo.LineRenderer.enabled = false;
             return;
         }
+        hexInfo.LineRenderer.enabled = true;
 
-        // We have a selected unit
+        Vector3[] ps = new Vector3[hexPath.Length];
 
-        // Look at the hex under our mouse
-
-        // Is this a different hex than before (or we don't already have a path)
-        if( hexPath == null || hexUnderMouse != hexLastUnderMouse )
+        for (int i = 0; i < hexPath.Length; i++)
         {
-            // Do a pathfinding search to that hex
-            hexPath = QPath.QPath.FindPath<Hex>( hexMap, selectionController.SelectedUnit, selectionController.SelectedUnit.Hex, hexUnderMouse, Hex.CostEstimate );
+            GameObject hexGO = hexInfo.HexMap.GetHexGO(hexPath[i]);
+            ps[i] = hexGO.transform.position + (Vector3.up * 0.1f);
         }
 
+        hexInfo.LineRenderer.positionCount = ps.Length;
+        hexInfo.LineRenderer.SetPositions(ps);
     }
 
-    void Update_CameraDrag ()
+
+    public class HexInfo
     {
-        if( Input.GetMouseButtonUp(0) )
-        {
-            DebugLogger.Log(LogLevel.Informational, "Cancelling camera drag.", GetType());
-            CancelUpdateFunc();
-            return;
-        }
-        
-        // Right now, all we need are camera controls
-
-        Vector3 hitPos = MouseToGroundPlane(Input.mousePosition);
-
-        Vector3 diff = lastMouseGroundPlanePosition - hitPos;
-        Camera.main.transform.Translate (diff, Space.World);
-
-        lastMouseGroundPlanePosition = hitPos = MouseToGroundPlane(Input.mousePosition);
-
-            
-
+        public HexMap HexMap;
+        public Hex CurrentHex;  // CurrentHex and PreviousHex
+        public Hex PreviousHex; // represent the 2 most recent
+        public Hex[] HexPath;   // hexes that were moused over.
+        public LineRenderer LineRenderer;
     }
 
-    void Update_ScrollZoom()
+    public class PositionInfo
     {
-        // Zoom to scrollwheel
-        float scrollAmount = Input.GetAxis ("Mouse ScrollWheel");
-        float minHeight = 2;
-        float maxHeight = 20;
-        // Move camera towards hitPos
-        Vector3 hitPos = MouseToGroundPlane(Input.mousePosition);
-        Vector3 dir = hitPos - Camera.main.transform.position;
-
-        Vector3 p = Camera.main.transform.position;
-
-        // Stop zooming out at a certain distance.
-        // TODO: Maybe you should still slide around at 20 zoom?
-        if (scrollAmount > 0 || p.y < (maxHeight - 0.1f)) {
-            cameraTargetOffset += dir * scrollAmount;
-        }
-        Vector3 lastCameraPosition = Camera.main.transform.position;
-        Camera.main.transform.position = Vector3.Lerp(Camera.main.transform.position, Camera.main.transform.position + cameraTargetOffset, Time.deltaTime * 5f);
-        cameraTargetOffset -= Camera.main.transform.position - lastCameraPosition;
-
-
-        p = Camera.main.transform.position;
-        if (p.y < minHeight) {
-            p.y = minHeight;
-        }
-        if (p.y > maxHeight) {
-            p.y = maxHeight;
-        }
-        Camera.main.transform.position = p;
-
-        // Change camera angle
-        Camera.main.transform.rotation = Quaternion.Euler (
-            Mathf.Lerp (30, 75, Camera.main.transform.position.y / maxHeight),
-            Camera.main.transform.rotation.eulerAngles.y,
-            Camera.main.transform.rotation.eulerAngles.z
-        );
-
-
+        /// <summary>
+        /// From Input.mousePosition
+        /// </summary>
+        public Vector3 lastMousePosition;
+        public Vector3 lastMouseGroundPlanePosition;
     }
 
-    void Update_CityView()
+    public class CameraInfo
     {
-        // Can you still click on a unit you see during city view?
-
-        Update_DetectModeStart();
+        /// <summary>
+        /// Threshold of mouse movement to start a drag
+        /// </summary>
+        public int MouseDragThreshold;
+        public Vector3 CameraTargetOffset;
     }
-
-    public void StartCityView()
-    {
-        Update_CurrentFunc = Update_CityView;
-    }
-
-
 }
