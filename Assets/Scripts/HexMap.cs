@@ -45,26 +45,38 @@ public class HexMap : MonoBehaviour, IQPathWorld {
     {
         foreach(Unit u in CurrentPlayer.Units)
         {
-            yield return DoUnitMoves( u );
+            yield return DoUnitMoves( u, null );
         }
     }
 
-    public IEnumerator DoUnitMoves( Unit u )
+    public IEnumerator DoUnitMoves(Unit u, MouseController.HexInfo hexInfo)
     {
         // Is there any reason we should check HERE if a unit should be moving?
         // I think the answer is no -- DoMove should just check to see if it needs
         // to do anything, or just return immediately.
-        while( u.DoMove() )
+        while ( u.DoMove() )
         {
             DebugLogger.Log(LogLevel.Informational, "DoMove returned true -- will be called again.", GetType());
+
+            // Update the pathfinding guideline
+            if (hexInfo != null)
+            {
+                hexInfo.HexPath = u.GetHexPath();
+                hexInfo.DrawPath(hexInfo.HexPath);
+            }
+
             // TODO: Check to see if an animation is playing, if so
             // wait for it to finish. 
             while (AnimationIsPlaying) {
                 yield return null; // Wait one frame
             }
-
         }
-
+        // Update the pathfinding guideline
+        if (hexInfo != null)
+        {
+            hexInfo.HexPath = u.GetHexPath();
+            hexInfo.DrawPath(hexInfo.HexPath);
+        }
     }
 
     public GameObject HexPrefab;

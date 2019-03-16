@@ -79,11 +79,11 @@ public class MouseController : MonoBehaviour
         positionInfo.lastMousePosition = Input.mousePosition;
         if (selectionController.SelectedUnit != null)
         {
-            DrawPath((hexInfo.HexPath != null) ? hexInfo.HexPath : selectionController.SelectedUnit.GetHexPath());
+            hexInfo.DrawPath((hexInfo.HexPath != null) ? hexInfo.HexPath : selectionController.SelectedUnit.GetHexPath());
         }
         else
         {
-            DrawPath(null);   // Clear the path display
+            hexInfo.DrawPath(null);   // Clear the path display
         }
     }
 
@@ -111,7 +111,6 @@ public class MouseController : MonoBehaviour
         {
             // We have a selected unit, and we've pushed down the right
             // mouse button, so enter unit movement mode.
-            //Update_CurrentFunc = Update_UnitMovement;
             mouseBehavior = new UnitMovement(this.StartCoroutine);
 
         }
@@ -121,12 +120,6 @@ public class MouseController : MonoBehaviour
             // Left button is being held down AND the mouse moved? That's a camera drag!
             mouseBehavior = new CameraMovement();
             positionInfo.lastMouseGroundPlanePosition = mouseBehavior.MouseToGroundPlane(Input.mousePosition);
-        }
-        else if (selectionController.SelectedUnit != null && Input.GetMouseButton(1))
-        {
-            // We have a selected unit, and we are holding down the mouse
-            // button.  We are in unit movement mode -- show a path from
-            // unit to mouse position via the pathfinding system.
         }
     }
 
@@ -153,27 +146,6 @@ public class MouseController : MonoBehaviour
         return null;
     }
 
-    private void DrawPath(Hex[] hexPath)
-    {
-        if (hexPath == null || hexPath.Length == 0)
-        {
-            hexInfo.LineRenderer.enabled = false;
-            return;
-        }
-        hexInfo.LineRenderer.enabled = true;
-
-        Vector3[] ps = new Vector3[hexPath.Length];
-
-        for (int i = 0; i < hexPath.Length; i++)
-        {
-            GameObject hexGO = hexInfo.HexMap.GetHexGO(hexPath[i]);
-            ps[i] = hexGO.transform.position + (Vector3.up * 0.1f);
-        }
-
-        hexInfo.LineRenderer.positionCount = ps.Length;
-        hexInfo.LineRenderer.SetPositions(ps);
-    }
-
 
     public class HexInfo
     {
@@ -182,6 +154,27 @@ public class MouseController : MonoBehaviour
         public Hex PreviousHex; // represent the 2 most recent
         public Hex[] HexPath;   // hexes that were moused over.
         public LineRenderer LineRenderer;
+
+        public void DrawPath(Hex[] hexPath)
+        {
+            if (hexPath == null || hexPath.Length == 0)
+            {
+                LineRenderer.enabled = false;
+                return;
+            }
+            LineRenderer.enabled = true;
+
+            Vector3[] ps = new Vector3[hexPath.Length];
+
+            for (int i = 0; i < hexPath.Length; i++)
+            {
+                GameObject hexGO = HexMap.GetHexGO(hexPath[i]);
+                ps[i] = hexGO.transform.position + (Vector3.up * 0.1f);
+            }
+
+            LineRenderer.positionCount = ps.Length;
+            LineRenderer.SetPositions(ps);
+        }
     }
 
     public class PositionInfo

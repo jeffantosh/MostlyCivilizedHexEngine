@@ -25,9 +25,11 @@ public class UnitMovement : AbstractMouseBehavior
             {
                 selectionController.SelectedUnit.SetHexPath(hexInfo.HexPath);
 
-                // TODO: Tell Unit and/or HexMap to process unit movement
-
-                this.callback(hexInfo.HexMap.DoUnitMoves(selectionController.SelectedUnit));
+                // Process this unit's moves
+                this.callback(hexInfo.HexMap.DoUnitMoves(selectionController.SelectedUnit, hexInfo));
+                // Reset pathfinding guideline
+                // TODO: autoselect the next unit (if there is one)?
+                //hexInfo.HexPath = selectionController.SelectedUnit.GetHexPath();
             }
 
             MarkComplete();
