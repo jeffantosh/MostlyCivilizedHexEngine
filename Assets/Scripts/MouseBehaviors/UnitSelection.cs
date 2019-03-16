@@ -8,15 +8,6 @@ public class UnitSelection : AbstractMouseBehavior
     {
         List<Unit> us = hexInfo.CurrentHex.Units;
 
-        //// TODO: Implement cycling through multiple units in the same tile
-        //if (us.Length > 0)
-        //{
-        //    selectionController.SelectedUnit = us[0];
-        //    // NOTE: Selecting a unit does NOT change our mouse mode
-        //}
-
-
-
         if (us.Count > 0)
         {
             DebugLogger.Log(LogLevel.Informational, "Unit(s) exist on this tile!", GetType());
@@ -31,7 +22,7 @@ public class UnitSelection : AbstractMouseBehavior
             {
                 // find the index of the current selected unit
                 int currentIndex = us.FindIndex(u => u.Equals(selectionController.SelectedUnit));
-                previousUnit = selectionController.SelectedUnit;
+                previousUnit = selectionController.SelectedUnit; // just hold this in memory for a bit to log later
                 if (currentIndex == -1)
                 {
                     // a unit on a different hex was selected
@@ -50,6 +41,9 @@ public class UnitSelection : AbstractMouseBehavior
                     selectionController.SelectedUnit = us[currentIndex + 1];
                 }
             }
+
+            // update the hex map's hex path so the pathfinding guideline resets.
+            hexInfo.HexPath = selectionController.SelectedUnit?.GetHexPath();
 
             LogMessage(previousUnit, selectionController.SelectedUnit);
         }

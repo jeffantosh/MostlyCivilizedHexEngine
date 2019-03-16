@@ -153,8 +153,6 @@ public class MouseController : MonoBehaviour
         return null;
     }
 
-    
-
     private void DrawPath(Hex[] hexPath)
     {
         if (hexPath == null || hexPath.Length == 0)
